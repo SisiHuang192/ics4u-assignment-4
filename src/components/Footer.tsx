@@ -5,6 +5,7 @@ export const Footer = () => {
     return (
         <footer className="bg-gray-800 text-white py-4 mt-8">
             <div className="container mx-auto text-center">
+                <p className="mb-2">Built with React, Vite, Tailwind and React Router</p>
                 <FaGithub />
                 <link rel="icon" href="https://github.com/Mr-Qayum/ics4u/tree/master" />
                 <FaLinkedin />

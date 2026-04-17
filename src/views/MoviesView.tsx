@@ -1,30 +1,54 @@
-import { ImageGrid, Pagination } from '@/components';
-import { NOW_PLAYING_ENDPOINT } from '@/core/constants';
-import type { MediaResponse } from '@/core/types';
-import { useTmdb } from '@/hooks';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-export const NowPlayingView = () => {
-  const navigate = useNavigate();
-  const [page, setPage] = useState<number>(1);
-  const { data } = useTmdb<MediaResponse>(NOW_PLAYING_ENDPOINT, { page }, [page]);
+type Movie = {
+  id: number;
+  original_title: string;
+  poster_path: string;
+};
 
-  const gridData = (data?.results ?? []).map((result) => ({
-    id: result.id,
-    imagePath: result.poster_path,
-    primaryText: result.original_title,
-  }));
+export const App = () => {
+  const [movies, setMovies] = useState<Movie[] | null>(null);
 
-  if (!data) {
-    return <p className="text-center text-gray-400">Loading...</p>;
-  }
+  useEffect(() => {
+    const getTMDBData = async () => {
+      try {
+        const response = await axios.get<{ results: Movie[] }>(
+          `https://api.themoviedb.org/3/movie/now_playing?api_key=${import.meta.env.VITE_TMDB_API_KEY}`,
+        );
+        setMovies(response.data.results);
+      } catch (error) {
+        console.error("Failed to fetch movies:", error);
+      }
+    };
+
+    getTMDBData();
+  }, []);
 
   return (
-    <section className="max-w-[1200px] mx-auto p-5 space-y-5">
-      <h1 className="text-3xl font-bold mb-4">Now Playing</h1>
-      <ImageGrid results={gridData} onClick={(id) => navigate(`/movie/${id}/credits`)} />
-      <Pagination page={page} maxPages={data.total_pages} onClick={setPage} />
-    </section>
+    <div className="max-w-[1200px] mx-auto p-10 sm:p-5">
+      <h1 className="text-center text-4xl sm:text-3xl mb-10 font-bold text-white">
+        Now Playing
+      </h1>
+
+      <div className="grid gap-7 sm:gap-5 grid-cols-[repeat(auto-fill,_minmax(220px,1fr))]">
+        {movies &&
+          movies.map((movie) => (
+            <div
+              key={movie.id}
+              className="bg-[#1e293b] rounded-xl overflow-hidden cursor-pointer transform transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)]"
+            >
+              <img
+                className="w-full block"
+                src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                alt={movie.original_title}
+              />
+              <h2 className="text-center text-white text-base p-3">
+                {movie.original_title}
+              </h2>
+            </div>
+          ))}
+      </div>
+    </div>
   );
 };
